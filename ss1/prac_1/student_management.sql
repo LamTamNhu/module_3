@@ -1,15 +1,15 @@
 create database if not exists student_management;
 use student_management;
 
-CREATE TABLE Class (
-    class_id INT PRIMARY KEY AUTO_INCREMENT,
-    class_name VARCHAR(50)
+create table class (
+    class_id int primary key auto_increment,
+    class_name varchar(50)
 );
 
 insert into class (class_name)
 values('C0823G1');
 
-create table Teacher(
+create table teacher(
 teacher_id int primary key auto_increment,
 teacher_name varchar(50),
 teacher_age int,
