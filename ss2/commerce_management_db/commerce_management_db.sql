@@ -1,5 +1,5 @@
-CREATE DATABASE QuanLyBanHang ;
-USE QuanLyBanHang ;
+CREATE DATABASE quan_ly_ban_hang ;
+USE quan_ly_ban_hang ;
 
 CREATE TABLE customer (
     customer_id INT PRIMARY KEY AUTO_INCREMENT,
