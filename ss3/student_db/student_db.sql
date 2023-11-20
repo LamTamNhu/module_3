@@ -98,6 +98,15 @@ set class_id=2
 where student_name='Hung';
 SET SQL_SAFE_UPDATES=1;
 
+-- Hiển thị các thông tin: StudentName, SubName, Mark. Dữ liệu sắp xếp theo điểm thi (mark) giảm dần. nếu trùng sắp theo tên tăng dần.
+SELECT 
+    s.student_id, student_name, m.mark
+FROM
+    student AS s
+        LEFT JOIN
+    mark AS m ON s.student_id = m.student_id
+ORDER BY mark DESC , student_name;
+
 
 
 
