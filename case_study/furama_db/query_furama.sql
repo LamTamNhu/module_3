@@ -198,15 +198,22 @@ HAVING hd.ngay_lam_hop_dong NOT IN (SELECT
 
 -- 13.	Hiển thị thông tin các Dịch vụ đi kèm được sử dụng nhiều nhất bởi các Khách hàng đã đặt phòng. (Lưu ý là có thể có nhiều dịch vụ có số lần sử dụng nhiều như nhau).
 SELECT 
-    dvdk.ma_dich_vu_di_kem,
-    ten_dich_vu_di_kem,
-    SUM(so_luong) AS so_luong_dvdk
+    ten_dich_vu_di_kem, SUM(ct.so_luong) AS so_luong_dvdk
 FROM
-    dich_vu_di_kem AS dvdk
+    dich_vu_di_kem dk
         JOIN
-    hop_dong_chi_tiet AS hdct ON dvdk.ma_dich_vu_di_kem = hdct.ma_dich_vu_di_kem
-GROUP BY dvdk.ma_dich_vu_di_kem
-HAVING so_luong_dvdk = MAX(so_luong);
+    hop_dong_chi_tiet ct ON dk.ma_dich_vu_di_kem = ct.ma_dich_vu_di_kem
+GROUP BY dk.ma_dich_vu_di_kem
+HAVING so_luong_dvdk = (SELECT 
+        MAX(sum_col) AS max_sum
+    FROM
+        (SELECT 
+            SUM(so_luong) AS sum_col
+        FROM
+            hop_dong_chi_tiet
+        GROUP BY ma_dich_vu_di_kem) AS sub);
+
+
 
 -- 14. Hiển thị thông tin tất cả các Dịch vụ đi kèm chỉ mới được sử dụng một lần duy nhất. Thông tin hiển thị bao gồm ma_hop_dong, ten_loai_dich_vu, ten_dich_vu_di_kem, so_lan_su_dung (được tính dựa trên việc count các ma_dich_vu_di_kem).
 SELECT 
@@ -228,7 +235,7 @@ GROUP BY hdct.ma_dich_vu_di_kem
 HAVING so_lan_su_dung = 1
 ORDER BY ten_loai_dich_vu;
 
--- Hiển thi thông tin của tất cả nhân viên bao gồm ma_nhan_vien, ho_ten, ten_trinh_do, ten_bo_phan, so_dien_thoai, dia_chi mới chỉ lập được tối đa 3 hợp đồng từ năm 2020 đến 2021.
+-- 15. Hiển thi thông tin của tất cả nhân viên bao gồm ma_nhan_vien, ho_ten, ten_trinh_do, ten_bo_phan, so_dien_thoai, dia_chi mới chỉ lập được tối đa 3 hợp đồng từ năm 2020 đến 2021.
 SELECT 
     nv.ma_nhan_vien,
     ho_ten,
