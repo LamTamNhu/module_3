@@ -73,8 +73,8 @@ SELECT
 FROM
     student
 WHERE
-    student_name LIKE 'H%'ông tin lớp học có thời gian bắt đầu vào tháng 12.
-
+    student_name LIKE 'H%';
+ -- Hiển thị các thông tin lớp học có thời gian bắt đầu vào tháng 12.
 SELECT 
     *
 FROM

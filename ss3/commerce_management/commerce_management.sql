@@ -42,9 +42,11 @@ INSERT INTO order_detail(order_id,product_id,order_quantity) VALUES (1,1,3),(1,3
 
 -- Hiển thị các thông tin  gồm oID, oDate, oPrice của tất cả các hóa đơn trong bảng Order
 SELECT 
-    order_id, customer_id, total_price
+    order_id, order_date, total_price
 FROM
-    `order`sách các khách hàng đã mua hàng, và danh sách sản phẩm được mua bởi các khách
+    `order`;
+    
+-- Hiển thị danh sách các khách hàng đã mua hàng, và danh sách sản phẩm được mua bởi các khách
 SELECT 
     c.customer_id,
     c.customer_name,
@@ -57,7 +59,7 @@ FROM
     order_detail od ON o.order_id = od.order_id
         JOIN
     product p ON od.product_id = p.product_id
-GROUP BY c.customer_id , c.customer_name;
+GROUP BY c.customer_id;
 
 -- Hiển thị tên những khách hàng không mua bất kỳ một sản phẩm nào
 SELECT c.customer_id,c.customer_name
@@ -68,12 +70,13 @@ WHERE o.order_id IS NULL;
 
 -- Hiển thị mã hóa đơn, ngày bán và giá tiền của từng hóa đơn (giá một hóa đơn được tính bằng tổng giá bán của từng loại mặt hàng xuất hiện trong hóa đơn. Giá bán của từng loại được tính = odQTY*pPrice)    
 SELECT 
-    o.order_id, o.order_date,
-    sum(od.order_quantity * p.product_price) AS order_total
+    o.order_id,
+    o.order_date,
+    SUM(od.order_quantity * p.product_price) AS order_total
 FROM
     `order` o
         JOIN
     order_detail od ON o.order_id = od.order_id
         JOIN
     product p ON od.product_id = p.product_id
-GROUP BY o.order_id , o.order_date;
+GROUP BY o.order_id;
