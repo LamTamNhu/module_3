@@ -266,7 +266,7 @@ join loai_khach as lk on kh.ma_loai_khach = lk.ma_loai_khach
 join hop_dong_chi_tiet as ct on ct.ma_hop_dong = hd.ma_hop_dong
 join dich_vu as dv on dv.ma_dich_vu = hd.ma_dich_vu
 join dich_vu_di_kem as dk on ct.ma_dich_vu_di_kem = dk.ma_dich_vu_di_kem
-where year(hd.ngay_lam_hop_dong) = 2021 and lk.ten_loai_khach = 'Platinum'
+where year(hd.ngay_lam_hop_dong) = 2021 and kh.ma_loai_khach = 2
 group by hd.ma_hop_dong
 having sum(dk.gia*ct.so_luong+dv.chi_phi_thue)>10000000;
 
