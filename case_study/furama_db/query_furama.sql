@@ -250,5 +250,26 @@ GROUP BY nv.ma_nhan_vien
 HAVING COUNT(ma_hop_dong) <= 3
     AND (hd.ngay_lam_hop_dong BETWEEN '2020-01-01' AND '2021-12-31');
 
+-- 16. Xóa những Nhân viên chưa từng lập được hợp đồng nào từ năm 2019 đến năm 2021.
+delete from nhan_vien
+where ma_nhan_vien not in
+(select ma_nhan_vien
+from hop_dong 
+where  year(hop_dong.ngay_lam_hop_dong) between 2019 and 2021);
 
+-- 17. Cập nhật thông tin những khách hàng có ten_loai_khach từ Platinum lên Diamond, chỉ cập nhật những khách hàng đã từng đặt phòng với Tổng Tiền thanh toán trong năm 2021 là lớn hơn 10.000.000 VNĐ.
+create view khach_hang_update_len_diamond as 
+select hd.ma_khach_hang
+from hop_dong as hd
+join khach_hang as kh on hd.ma_khach_hang=kh.ma_khach_hang
+join loai_khach as lk on kh.ma_loai_khach = lk.ma_loai_khach
+join hop_dong_chi_tiet as ct on ct.ma_hop_dong = hd.ma_hop_dong
+join dich_vu as dv on dv.ma_dich_vu = hd.ma_dich_vu
+join dich_vu_di_kem as dk on ct.ma_dich_vu_di_kem = dk.ma_dich_vu_di_kem
+where year(hd.ngay_lam_hop_dong) = 2021 and lk.ten_loai_khach = 'Platinum'
+group by hd.ma_hop_dong
+having sum(dk.gia*ct.so_luong+dv.chi_phi_thue)>10000000;
 
+update khach_hang as kh
+	inner join khach_hang_update_len_diamond as ud on ud.ma_khach_hang = kh.ma_khach_hang
+set kh.ma_loai_khach = 1;
