@@ -251,45 +251,101 @@ HAVING COUNT(ma_hop_dong) <= 3
     AND (hd.ngay_lam_hop_dong BETWEEN '2020-01-01' AND '2021-12-31');
 
 -- 16. Xóa những Nhân viên chưa từng lập được hợp đồng nào từ năm 2019 đến năm 2021.
-delete from nhan_vien
-where ma_nhan_vien not in
-(select ma_nhan_vien
-from hop_dong 
-where  year(hop_dong.ngay_lam_hop_dong) between 2019 and 2021);
+DELETE FROM nhan_vien 
+WHERE
+    ma_nhan_vien NOT IN (SELECT 
+        ma_nhan_vien
+    FROM
+        hop_dong
+    
+    WHERE
+        YEAR(hop_dong.ngay_lam_hop_dong) BETWEEN 2019 AND 2021);
 
 -- 17. Cập nhật thông tin những khách hàng có ten_loai_khach từ Platinum lên Diamond, chỉ cập nhật những khách hàng đã từng đặt phòng với Tổng Tiền thanh toán trong năm 2021 là lớn hơn 10.000.000 VNĐ.
-create view khach_hang_update_len_diamond as 
-select hd.ma_khach_hang
-from hop_dong as hd
-join khach_hang as kh on hd.ma_khach_hang=kh.ma_khach_hang
-join loai_khach as lk on kh.ma_loai_khach = lk.ma_loai_khach
-join hop_dong_chi_tiet as ct on ct.ma_hop_dong = hd.ma_hop_dong
-join dich_vu as dv on dv.ma_dich_vu = hd.ma_dich_vu
-join dich_vu_di_kem as dk on ct.ma_dich_vu_di_kem = dk.ma_dich_vu_di_kem
-where year(hd.ngay_lam_hop_dong) = 2021 and kh.ma_loai_khach = 2
-group by hd.ma_hop_dong
-having sum(dk.gia*ct.so_luong+dv.chi_phi_thue)>10000000;
+CREATE VIEW khach_hang_update_len_diamond AS
+    SELECT 
+        hd.ma_khach_hang
+    FROM
+        hop_dong AS hd
+            JOIN
+        khach_hang AS kh ON hd.ma_khach_hang = kh.ma_khach_hang
+            JOIN
+        loai_khach AS lk ON kh.ma_loai_khach = lk.ma_loai_khach
+            JOIN
+        hop_dong_chi_tiet AS ct ON ct.ma_hop_dong = hd.ma_hop_dong
+            JOIN
+        dich_vu AS dv ON dv.ma_dich_vu = hd.ma_dich_vu
+            JOIN
+        dich_vu_di_kem AS dk ON ct.ma_dich_vu_di_kem = dk.ma_dich_vu_di_kem
+    WHERE
+        YEAR(hd.ngay_lam_hop_dong) = 2021
+            AND kh.ma_loai_khach = 2
+    GROUP BY hd.ma_hop_dong
+    HAVING SUM(dk.gia * ct.so_luong + dv.chi_phi_thue) > 10000000;
 
-update khach_hang as kh
-	inner join khach_hang_update_len_diamond as ud on ud.ma_khach_hang = kh.ma_khach_hang
-set kh.ma_loai_khach = 1;
+UPDATE khach_hang AS kh
+        INNER JOIN
+    khach_hang_update_len_diamond AS ud ON ud.ma_khach_hang = kh.ma_khach_hang 
+SET 
+    kh.ma_loai_khach = 1;
 
 -- 18.	Xóa những khách hàng có hợp đồng trước năm 2021 (chú ý ràng buộc giữa các bảng).
-set sql_mode=0;
-with kh_hd_truoc_2021 as(
-select kh.ma_khach_hang
-from khach_hang as kh
-join hop_dong as hd on hd.ma_khach_hang = kh.ma_khach_hang
-where year(ngay_lam_hop_dong)<2021
-group by kh.ma_khach_hang)
-delete from khach_hang
-where ma_khach_hang in (select ma_khach_hang
-from kh_hd_truoc_2021);
+WITH kh_hd_truoc_2021
+AS (
+	SELECT kh.ma_khach_hang
+	FROM khach_hang AS kh
+	INNER JOIN hop_dong AS hd ON hd.ma_khach_hang = kh.ma_khach_hang
+	WHERE year(ngay_lam_hop_dong) < 2021
+	GROUP BY kh.ma_khach_hang
+	)
+UPDATE khach_hang 
+SET 
+    is_delete = 1
+WHERE
+    ma_khach_hang IN (SELECT 
+            ma_khach_hang
+        FROM
+            kh_hd_truoc_2021)
+        AND ma_khach_hang > 0;
+
+-- 19. Cập nhật giá cho các dịch vụ đi kèm được sử dụng trên 10 lần trong năm 2020 lên gấp đôi.
+WITH dvdk_su_dung_tren_10_lan
+AS (
+	SELECT ct.ma_dich_vu_di_kem
+		,sum(so_luong) AS so_lan_su_dung
+	FROM hop_dong_chi_tiet AS ct
+	INNER JOIN dich_vu_di_kem AS dk ON ct.ma_dich_vu_di_kem = dk.ma_dich_vu_di_kem
+	GROUP BY ct.ma_dich_vu_di_kem
+	HAVING so_lan_su_dung > 10
+	)
 
 
-delete from khach_hang
-where ma_khach_hang in (select * from (select kh.ma_khach_hang
-from khach_hang as kh
-join hop_dong as hd on hd.ma_khach_hang = kh.ma_khach_hang
-where year(ngay_lam_hop_dong)<2021
-group by kh.ma_khach_hang) as temp);
+UPDATE dich_vu_di_kem 
+SET 
+    gia = gia * 2
+WHERE
+    ma_dich_vu_di_kem IN (SELECT 
+            ma_dich_vu_di_kem
+        FROM
+            dvdk_su_dung_tren_10_lan)
+        AND ma_dich_vu_di_kem > 0;
+
+-- 20. Hiển thị thông tin của tất cả các nhân viên và khách hàng có trong hệ thống, thông tin hiển thị bao gồm id (ma_nhan_vien, ma_khach_hang), ho_ten, email, so_dien_thoai, ngay_sinh, dia_chi.
+SELECT 
+    ma_nhan_vien AS id,
+    ho_ten,
+    email,
+    so_dien_thoai,
+    ngay_sinh,
+    dia_chi
+FROM
+    nhan_vien 
+UNION SELECT 
+    ma_khach_hang,
+    ho_ten,
+    email,
+    so_dien_thoai,
+    ngay_sinh,
+    dia_chi
+FROM
+    khach_hang;
