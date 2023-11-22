@@ -273,3 +273,23 @@ having sum(dk.gia*ct.so_luong+dv.chi_phi_thue)>10000000;
 update khach_hang as kh
 	inner join khach_hang_update_len_diamond as ud on ud.ma_khach_hang = kh.ma_khach_hang
 set kh.ma_loai_khach = 1;
+
+-- 18.	Xóa những khách hàng có hợp đồng trước năm 2021 (chú ý ràng buộc giữa các bảng).
+set sql_mode=0;
+with kh_hd_truoc_2021 as(
+select kh.ma_khach_hang
+from khach_hang as kh
+join hop_dong as hd on hd.ma_khach_hang = kh.ma_khach_hang
+where year(ngay_lam_hop_dong)<2021
+group by kh.ma_khach_hang)
+delete from khach_hang
+where ma_khach_hang in (select ma_khach_hang
+from kh_hd_truoc_2021);
+
+
+delete from khach_hang
+where ma_khach_hang in (select * from (select kh.ma_khach_hang
+from khach_hang as kh
+join hop_dong as hd on hd.ma_khach_hang = kh.ma_khach_hang
+where year(ngay_lam_hop_dong)<2021
+group by kh.ma_khach_hang) as temp);

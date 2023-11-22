@@ -28,6 +28,7 @@ create table nhan_vien (
     ma_vi_tri int,
     ma_trinh_do int,
     ma_bo_phan int,
+    is_delete bit(1) default 0,
     foreign key (ma_vi_tri)
         references vi_tri (ma_vi_tri),
     foreign key (ma_bo_phan)
@@ -51,6 +52,7 @@ create table khach_hang (
     so_dien_thoai varchar(45),
     email varchar(45),
     dia_chi varchar(45),
+    is_delete bit(1) default 0,
     foreign key (ma_loai_khach)
         references loai_khach (ma_loai_khach)
 );
