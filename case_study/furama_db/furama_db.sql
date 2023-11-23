@@ -28,7 +28,7 @@ create table nhan_vien (
     ma_vi_tri int,
     ma_trinh_do int,
     ma_bo_phan int,
-    is_delete bit(1) default 0,
+    is_deleted bit(1) default 0,
     foreign key (ma_vi_tri)
         references vi_tri (ma_vi_tri),
     foreign key (ma_bo_phan)
@@ -52,7 +52,7 @@ create table khach_hang (
     so_dien_thoai varchar(45),
     email varchar(45),
     dia_chi varchar(45),
-    is_delete bit(1) default 0,
+    is_deleted bit(1) default 0,
     foreign key (ma_loai_khach)
         references loai_khach (ma_loai_khach)
 );
@@ -80,6 +80,7 @@ create table dich_vu (
     dien_tich_ho_boi double,
     so_tang int,
     dich_vu_mien_phi_di_kem text,
+    is_deleted bit(1) default 0,
     foreign key (ma_kieu_thue)
         references kieu_thue (ma_kieu_thue),
     foreign key (ma_loai_dich_vu)
@@ -94,6 +95,7 @@ create table hop_dong (
     ma_nhan_vien int,
     ma_khach_hang int,
     ma_dich_vu int,
+    is_deleted bit(1) default 0,
     foreign key (ma_nhan_vien)
         references nhan_vien (ma_nhan_vien),
     foreign key (ma_khach_hang)
@@ -120,6 +122,11 @@ create table hop_dong_chi_tiet (
     foreign key (ma_dich_vu_di_kem)
         references dich_vu_di_kem (ma_dich_vu_di_kem)
 );
+
+create table so_ban_ghi_hop_dong(
+ma_cap_nhat int primary key auto_increment,
+so_ban_ghi int,
+thoi_gian_cap_nhat DATETIME default now());
 
 insert into vi_tri(ten_vi_tri) values
 ('Quản lý'),

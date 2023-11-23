@@ -143,8 +143,6 @@ FROM
     hop_dong AS hd
         LEFT JOIN
     hop_dong_chi_tiet AS hdct ON hd.ma_hop_dong = hdct.ma_hop_dong
-        LEFT JOIN
-    dich_vu_di_kem AS dvdk ON hdct.ma_dich_vu_di_kem = dvdk.ma_dich_vu_di_kem
 GROUP BY hd.ma_hop_dong;
 
 -- 11.	Hiển thị thông tin các dịch vụ đi kèm đã được sử dụng bởi những khách hàng có ten_loai_khach là “Diamond” và có dia_chi ở “Vinh” hoặc “Quảng Ngãi”.
@@ -170,6 +168,7 @@ WHERE
         OR kh.dia_chi LIKE '%quảng ngãi%');
 
 -- 12.	Hiển thị thông tin ma_hop_dong, ho_ten (nhân viên), ho_ten (khách hàng), so_dien_thoai (khách hàng), ten_dich_vu, so_luong_dich_vu_di_kem (được tính dựa trên việc sum so_luong ở dich_vu_di_kem), tien_dat_coc của tất cả các dịch vụ đã từng được khách hàng đặt vào 3 tháng cuối năm 2020 nhưng chưa từng được khách hàng đặt vào 6 tháng đầu năm 2021.
+set sql_mode=0;
 SELECT 
     hd.ma_hop_dong,
     nv.ho_ten,
@@ -179,9 +178,9 @@ SELECT
     SUM(hdct.so_luong) AS so_luong_dich_vu_di_kem
 FROM
     hop_dong AS hd
-        LEFT JOIN
+        JOIN
     nhan_vien AS nv ON nv.ma_nhan_vien = hd.ma_nhan_vien
-        LEFT JOIN
+        JOIN
     khach_hang AS kh ON kh.ma_khach_hang = hd.ma_khach_hang
         LEFT JOIN
     dich_vu AS dv ON dv.ma_dich_vu = hd.ma_dich_vu
@@ -300,7 +299,7 @@ AS (
 	)
 UPDATE khach_hang 
 SET 
-    is_delete = 1
+    is_deleted = 1
 WHERE
     ma_khach_hang IN (SELECT 
             ma_khach_hang
@@ -349,3 +348,170 @@ UNION SELECT
     dia_chi
 FROM
     khach_hang;
+    
+-- 21.	Tạo khung nhìn có tên là v_nhan_vien để lấy được thông tin của tất cả các nhân viên có địa chỉ là “Hải Châu” và đã từng lập hợp đồng cho một hoặc nhiều khách hàng bất kì với ngày lập hợp đồng là “12/12/2019”.
+CREATE OR REPLACE VIEW v_nhan_vien AS
+    SELECT 
+        nv.*
+    FROM
+        nhan_vien AS nv
+            JOIN
+        hop_dong AS hd ON nv.ma_nhan_vien = hd.ma_nhan_vien
+    GROUP BY nv.ma_nhan_vien , hd.ngay_lam_hop_dong
+    HAVING ngay_lam_hop_dong = '2019-12-12'
+        AND dia_chi LIKE '%Hải Châu%';
+
+select * from v_nhan_vien;
+
+-- 22.	Thông qua khung nhìn v_nhan_vien thực hiện cập nhật địa chỉ thành “Liên Chiểu” đối với tất cả các nhân viên được nhìn thấy bởi khung nhìn này.
+UPDATE nhan_vien 
+SET 
+    dia_chi = 'Liên Chiểu'
+WHERE
+    ma_nhan_vien IN (SELECT 
+            ma_nhan_vien
+        FROM
+            v_nhan_vien)
+        AND ma_nhan_vien > 0;
+        
+-- 23.	Tạo Stored Procedure sp_xoa_khach_hang dùng để xóa thông tin của một khách hàng nào đó với ma_khach_hang được truyền vào như là 1 tham số của sp_xoa_khach_hang.
+delimiter //
+create procedure sp_xoa_khach_hang(id int)
+begin
+update khach_hang
+set is_deleted=1
+where ma_khach_hang=id;
+end
+// delimiter ;
+
+call sp_xoa_khach_hang(3);
+
+-- 24.	Tạo Stored Procedure sp_them_moi_hop_dong dùng để thêm mới vào bảng hop_dong với yêu cầu sp_them_moi_hop_dong phải thực hiện kiểm tra tính hợp lệ của dữ liệu bổ sung, với nguyên tắc không được trùng khóa chính và đảm bảo toàn vẹn tham chiếu đến các bảng liên quan.
+delimiter //
+create procedure sp_them_moi_hop_dong (new_ngay_lam_hop_dong datetime,
+    new_ngay_ket_thuc datetime,
+    new_tien_dat_coc double,
+    new_ma_nhan_vien int,
+    new_ma_khach_hang int,
+    new_ma_dich_vu int)
+    begin    
+    if new_ma_nhan_vien not in (select ma_nhan_vien from nhan_vien) then 
+    signal SQLSTATE '45000' set MESSAGE_TEXT= 'Mã nhân viên không tồn tại!';
+    end if;
+    
+    if(new_ma_khach_hang not in (select ma_khach_hang from khach_hang)) 
+    then signal SQLSTATE '45000' set MESSAGE_TEXT= 'Mã khách hàng không tồn tại!'; end if;
+    
+    if(new_ma_dich_vu not in (select ma_dich_vu from dich_vu)) 
+    then signal SQLSTATE '45000' set MESSAGE_TEXT= 'Mã dịch vụ không tồn tại!'; end if;
+    
+    insert into hop_dong (ngay_lam_hop_dong,ngay_ket_thuc,tien_dat_coc,ma_nhan_vien,ma_khach_hang,ma_dich_vu)
+    values (new_ngay_lam_hop_dong,new_ngay_ket_thuc,new_tien_dat_coc,new_ma_nhan_vien,new_ma_khach_hang,new_ma_dich_vu);
+    end
+    // delimiter ;
+    
+    call sp_them_moi_hop_dong('2023-01-01','2023-02-01',11,1,2,2);
+    
+-- 25.	Tạo Trigger có tên tr_xoa_hop_dong khi xóa bản ghi trong bảng hop_dong thì hiển thị tổng số lượng bản ghi còn lại có trong bảng hop_dong ra giao diện console của database.
+-- Lưu ý: Đối với MySQL thì sử dụng SIGNAL hoặc ghi log thay cho việc ghi ở console.
+delimiter //
+create or replace view count_record_hop_dong as
+select count(ma_hop_dong) as so_luong_hop_dong
+from hop_dong
+where is_deleted=0;
+
+create trigger tr_xoa_hop_dong after update on hop_dong
+for each row
+if (new.is_deleted<>old.is_deleted) 
+then 
+begin
+declare so_ban_ghi_update int;
+set so_ban_ghi_update = (select so_luong_hop_dong from count_record_hop_dong);
+insert into so_ban_ghi_hop_dong(so_ban_ghi) values (so_ban_ghi_update);
+end;
+end if;
+// delimiter ;
+
+UPDATE hop_dong 
+SET 
+    is_deleted = 1
+WHERE
+    ma_hop_dong = 5;
+SELECT 
+    *
+FROM
+    so_ban_ghi_hop_dong;
+
+-- 26.	Tạo Trigger có tên tr_cap_nhat_hop_dong khi cập nhật ngày kết thúc hợp đồng, cần kiểm tra xem thời gian cập nhật có phù hợp hay không, với quy tắc sau: Ngày kết thúc hợp đồng phải lớn hơn ngày làm hợp đồng ít nhất là 2 ngày. Nếu dữ liệu hợp lệ thì cho phép cập nhật, nếu dữ liệu không hợp lệ thì in ra thông báo “Ngày kết thúc hợp đồng phải lớn hơn ngày làm hợp đồng ít nhất là 2 ngày” trên console của database.
+delimiter // 
+create trigger tr_cap_nhat_hop_dong before update on hop_dong
+for each row 
+if day(new.ngay_ket_thuc) - day(old.ngay_lam_hop_dong) < 2 then 
+signal SQLSTATE '45000' 
+set MESSAGE_TEXT = 'Ngày kết thúc hợp đồng phải lớn hơn ngày làm hợp đồng ít nhất là 2 ngày';
+end if;
+// delimiter ;
+
+/*
+ 27.	Tạo Function thực hiện yêu cầu sau:
+a.	Tạo Function func_dem_dich_vu: Đếm các dịch vụ đã được sử dụng với tổng tiền là > 2.000.000 VNĐ.
+b.	Tạo Function func_tinh_thoi_gian_hop_dong: Tính khoảng thời gian dài nhất tính từ lúc bắt đầu làm hợp đồng đến lúc kết thúc hợp đồng mà khách hàng đã thực hiện thuê dịch vụ (lưu ý chỉ xét các khoảng thời gian dựa vào từng lần làm hợp đồng thuê dịch vụ, không xét trên toàn bộ các lần làm hợp đồng). Mã của khách hàng được truyền vào như là 1 tham số của function này.
+*/
+-- a
+delimiter //
+create function func_dem_dich_vu () RETURNS INT
+  DETERMINISTIC
+  begin
+  declare result int;
+  with chi_phi as(
+  select sum(chi_phi_thue) as chi_phi, ten_dich_vu
+  from dich_vu as dv
+  join hop_dong as hd on dv.ma_dich_vu = hd.ma_dich_vu
+  group by dv.ma_dich_vu
+  having chi_phi >2000000)
+  
+  select count(ten_dich_vu) into result
+  from chi_phi;  
+  return result;
+  end
+  // delimiter ;
+  
+select func_dem_dich_vu();
+
+-- b
+delimiter //
+create function func_tinh_thoi_gian_hop_dong (id int) returns INT
+DETERMINISTIC
+begin
+declare result int;
+with tinh_ngay as
+(select datediff(ngay_ket_thuc,ngay_lam_hop_dong) as theo_ngay
+from hop_dong
+where id = ma_khach_hang and is_deleted=0)
+
+select max(theo_ngay) into result
+from tinh_ngay;
+return result;
+end
+// delimiter ;
+
+select func_tinh_thoi_gian_hop_dong(1);
+
+-- 28.	Tạo Stored Procedure sp_xoa_dich_vu_va_hd_room để tìm các dịch vụ được thuê bởi khách hàng với loại dịch vụ là “Room” từ đầu năm 2015 đến hết năm 2019 để xóa thông tin của các dịch vụ đó (tức là xóa các bảng ghi trong bảng dich_vu) và xóa những hop_dong sử dụng dịch vụ liên quan (tức là phải xóa những bản gi trong bảng hop_dong) và những bản liên quan khác.
+delimiter //
+create procedure sp_xoa_dich_vu_va_hd_room ()
+begin
+with bang_de_xoa as
+(select dv.ma_dich_vu as id_xoa
+from dich_vu as dv
+join hop_dong as hd on dv.ma_dich_vu = hd.ma_dich_vu
+group by dv.ma_dich_vu, ma_loai_dich_vu,ngay_lam_hop_dong
+having ma_loai_dich_vu=3 and year(ngay_lam_hop_dong) between 2015 and 2019)
+
+update dich_vu as dv,hop_dong as hd
+set dv.is_deleted=1,hd.is_deleted=1
+where dv.ma_dich_vu=hd.ma_dich_vu and dv.ma_dich_vu in (select id_xoa from bang_de_xoa) and dv.ma_dich_vu>0;
+end
+// delimiter ;
+
+call sp_xoa_dich_vu_va_hd_room();
