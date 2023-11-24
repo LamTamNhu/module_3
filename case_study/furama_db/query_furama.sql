@@ -261,9 +261,9 @@ WHERE
         YEAR(hop_dong.ngay_lam_hop_dong) BETWEEN 2019 AND 2021);
 
 -- 17. Cập nhật thông tin những khách hàng có ten_loai_khach từ Platinum lên Diamond, chỉ cập nhật những khách hàng đã từng đặt phòng với Tổng Tiền thanh toán trong năm 2021 là lớn hơn 10.000.000 VNĐ.
-CREATE VIEW khach_hang_update_len_diamond AS
+CREATE OR REPLACE VIEW sum_hop_dong AS
     SELECT 
-        hd.ma_khach_hang
+        hd.ma_khach_hang, SUM(dk.gia * ct.so_luong + dv.chi_phi_thue) as tong_chi_tieu_theo_hop_dong
     FROM
         hop_dong AS hd
             JOIN
@@ -279,14 +279,20 @@ CREATE VIEW khach_hang_update_len_diamond AS
     WHERE
         YEAR(hd.ngay_lam_hop_dong) = 2021
             AND kh.ma_loai_khach = 2
-    GROUP BY hd.ma_hop_dong
-    HAVING SUM(dk.gia * ct.so_luong + dv.chi_phi_thue) > 10000000;
+    GROUP BY hd.ma_hop_dong;
+    
+with tong_chi_tieu as 
+(select ma_khach_hang
+from sum_hop_dong
+group by ma_khach_hang
+having sum(tong_chi_tieu_theo_hop_dong) >10000000)
 
 UPDATE khach_hang AS kh
-        INNER JOIN
-    khach_hang_update_len_diamond AS ud ON ud.ma_khach_hang = kh.ma_khach_hang 
 SET 
-    kh.ma_loai_khach = 1;
+    ma_loai_khach = 1
+where ma_khach_hang in (
+select ma_khach_hang
+from tong_chi_tieu);
 
 -- 18.	Xóa những khách hàng có hợp đồng trước năm 2021 (chú ý ràng buộc giữa các bảng).
 WITH kh_hd_truoc_2021
@@ -501,7 +507,7 @@ select func_tinh_thoi_gian_hop_dong(1);
 delimiter //
 create procedure sp_xoa_dich_vu_va_hd_room ()
 begin
-with bang_de_xoa as
+with bang_de_xoa as 
 (select dv.ma_dich_vu as id_xoa
 from dich_vu as dv
 join hop_dong as hd on dv.ma_dich_vu = hd.ma_dich_vu
