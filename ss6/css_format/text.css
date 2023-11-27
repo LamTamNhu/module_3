@@ -1,0 +1,10 @@
+p {
+    text-indent: 50px;
+    margin-right: 50%;
+    font-family: Linux Libertine, serif;
+    font-size: 16px;
+}
+
+span.bold {
+    font-weight: bold;
+}
