@@ -5,15 +5,41 @@
 body {
     background-color: #F1F1F1;
     margin: 0;
+    text-align: center;
 }
 
-div {
+.right-bar {
+    float: right;
+    padding: 10px;
+    width: 15vw;
+}
+
+.right-bar div {
+    border: 1px solid gray;
+    background-color: #F4F4F4;
+    margin: 10px;
+    padding: 30px;
     display: block;
-    margin: auto;
+}
+
+#main {
+    text-align: left;
+    display: inline-block;
     padding: 20px 2vw 0 2vw;
     width: 70vw;
-    height: 100vh;
+    height: 80vh;
     background-color: white;
+}
+
+#left-bar {
+    float: left;
+    width: 15vw;
+}
+
+#left-bar a {
+    margin: auto;
+    text-decoration: none;
+    display: block;
 }
 
 h1 {
@@ -33,11 +59,12 @@ h1 {
     position: absolute;
     visibility: hidden;
     background-color: black;
+    padding: 0;
 }
 
 #top-menu li ul li {
     margin: 0;
-    padding: 5px 2px 5px 2px;
+    padding: 20px;
     color: whitesmoke;
     display: block;
 }
@@ -59,4 +86,18 @@ h1 {
     background-color: #222222;
     padding: 0;
     margin: 0;
+}
+
+.footer {
+    display: block;
+    text-align: center;
+    background-color: #555555;
+}
+
+.footer p {
+    margin: 0;
+    padding: 50px;
+    font-size: 20px;
+    font-weight: bold;
+    color: #FFFFFF;
 }
