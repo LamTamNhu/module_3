@@ -22,16 +22,12 @@ public class CalculatorServlet extends HttpServlet {
         Double discountAmount = price * discountPercent * 0.01;
         Double discountPrice = price - discountAmount;
 
-        PrintWriter writer = response.getWriter();
-        writer.println("<html>");
-        writer.println("<p>");
-        writer.println("Product Description: " + productDescription + "<br>");
-        writer.println("List Price: " + price + "<br>");
-        writer.println("Discount percent: " + discountPercent + "<br>");
-        writer.println("Result<br>");
-        writer.println("Discount amount: " + discountAmount + "<br>");
-        writer.println("Discount price: " + discountPrice);
-        writer.println("</p>");
-        writer.println("</html>");
+        RequestDispatcher requestDispatcher = request.getRequestDispatcher("result.jsp");
+        request.setAttribute("productDescription", productDescription);
+        request.setAttribute("price", price);
+        request.setAttribute("discountPercent", discountPercent);
+        request.setAttribute("discountAmount", discountAmount);
+        request.setAttribute("discountPrice", discountPrice);
+        requestDispatcher.forward(request, response);
     }
 }
