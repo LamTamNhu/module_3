@@ -9,7 +9,7 @@
     <h1>Product Discount Calculator</h1>
     <p>Product description <input type="text" name="description"></p>
     <p>List price <input type="number" name="price"></p>
-    <p>Discount percent <input type="number" name="discount percent"></p>
+    <p>Discount percent <input type="number" name="discount_percent"></p>
     <button type="submit">Submit</button>
 </form>
 </body>
