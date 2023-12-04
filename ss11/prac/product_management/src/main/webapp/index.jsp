@@ -7,10 +7,5 @@
 </head>
 <body>
 <jsp:forward page="/product-servlet?action=view"></jsp:forward>
-<h1>Products</h1>
-<button>Add product</button>
-<table>
-
-</table>
 </body>
 </html>

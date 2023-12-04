@@ -17,22 +17,29 @@ public class ProductServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String action = request.getParameter("action");
+        if (action == null) {
+            action = "";
+        }
         switch (action) {
             case "view":
                 displayProducts(request, response);
                 break;
             case "add":
+                System.out.println("added worked!");
                 break;
             case "edit":
+                System.out.println("edit worked!");
                 break;
             case "remove":
+                System.out.println("remove worked!");
                 break;
             case "detail":
+                System.out.println("detail worked!");
         }
     }
 
     private void displayProducts(HttpServletRequest request, HttpServletResponse response) {
-        RequestDispatcher requestDispatcher = request.getRequestDispatcher("index.jsp");
+        RequestDispatcher requestDispatcher = request.getRequestDispatcher("display.jsp");
         List<Product> products = productService.getProducts();
         request.setAttribute("products", products);
         try {
