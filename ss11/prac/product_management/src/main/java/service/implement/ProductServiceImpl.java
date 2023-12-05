@@ -14,4 +14,25 @@ public class ProductServiceImpl implements ProductService {
     public List<Product> getProducts() {
         return repository.getProducts();
     }
+
+    @Override
+    public void addProduct(Product product) {
+        repository.addProduct(product);
+    }
+
+    @Override
+    public Product findById(String id) {
+        return repository.findById(id);
+
+    }
+
+    @Override
+    public void editProduct(Product productEdited) {
+        repository.editProduct(productEdited);
+    }
+
+    @Override
+    public void removeProduct(String id) {
+        repository.removeProduct(id);
+    }
 }

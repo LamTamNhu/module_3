@@ -12,7 +12,7 @@
     <title>Products</title>
 </head>
 <body>
-<form action="/product-servlet" method="get" target="_blank">
+<form action="/product-servlet">
     <button type="submit" name="action" value="add">Add product</button>
 </form>
 
@@ -26,23 +26,19 @@
     <c:forEach items="${products}" var="product" varStatus="loop">
         <tr>
             <td>${loop.count}</td>
-            <td>${product.name}</td>
+            <td>
+                <a href="#" onclick="popupDetail('${product.description}')">${product.name}</a>
+            </td>
             <td>${product.price}</td>
             <td>${product.productionDate}</td>
             <td>
-                <form action="/product-servlet" method="get">
-                    <input type="hidden" name="id" value="${product.id}">
-                    <button type="submit" name="action" value="detail">Product detail</button>
-                </form>
-            </td>
-            <td>
-                <form action="/product-servlet" method="get">
+                <form action="/product-servlet">
                     <input type="hidden" name="id" value="${product.id}">
                     <button type="submit" name="action" value="edit">Edit</button>
                 </form>
             </td>
             <td>
-                <form action="/product-servlet" method="get">
+                <form action="/product-servlet">
                     <input type="hidden" name="id" value="${product.id}">
                     <button type="submit" name="action" value="remove">Remove</button>
                 </form>
@@ -50,5 +46,11 @@
         </tr>
     </c:forEach>
 </table>
+<script>
+    function popupDetail(description) {
+        console.log("Worked!");
+        alert(description);
+    }
+</script>
 </body>
 </html>

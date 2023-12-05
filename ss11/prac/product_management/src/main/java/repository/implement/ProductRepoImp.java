@@ -23,4 +23,34 @@ public class ProductRepoImp implements ProductRepository {
     public List<Product> getProducts() {
         return products;
     }
+
+    @Override
+    public void addProduct(Product product) {
+        products.add(product);
+    }
+
+    @Override
+    public Product findById(String id) {
+        for (Product p : products) {
+            if (id.equals(p.getId())) {
+                return p;
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public void editProduct(Product productEdited) {
+        Product productToEdit = findById(productEdited.getId());
+        productToEdit.setName(productEdited.getName());
+        productToEdit.setPrice(productEdited.getPrice());
+        productToEdit.setProductionDate(productEdited.getProductionDate());
+        productToEdit.setDescription(productEdited.getDescription());
+    }
+
+    @Override
+    public void removeProduct(String id) {
+        Product productToRemove = findById(id);
+        products.remove(productToRemove);
+    }
 }

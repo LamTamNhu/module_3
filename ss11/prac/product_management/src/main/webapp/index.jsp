@@ -6,6 +6,8 @@
   <title>Product Management</title>
 </head>
 <body>
-<jsp:forward page="/product-servlet?action=view"></jsp:forward>
+<%
+  response.sendRedirect(request.getContextPath() + "/product-servlet?action=view");
+%>
 </body>
 </html>
