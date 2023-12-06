@@ -7,10 +7,22 @@
 </head>
 <body>
 <center>
-    <h1>User Management</h1>
-    <h2>
-        <a href="/users?action=create">Add New User</a>
-    </h2>
+    <a href="/users" style="text-decoration: none"><h1>User Management</h1></a>
+
+    <form action="/users">
+        <button type="submit" name="action" value="create">Add New User</button>
+    </form>
+    <br>
+    <form action="/users">
+        <input type="text" name="country" placeholder="country name">
+        <button type="submit" name="action" value="search_by_country">Search user by country</button>
+    </form>
+    <br>
+    <form action="/users">
+        <input type="text" name="name" placeholder="user name">
+        <button type="submit" name="action" value="search_by_name">Search user by name</button>
+    </form>
+
 </center>
 <div align="center">
     <table border="1" cellpadding="5">
