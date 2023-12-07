@@ -79,6 +79,30 @@ public class UserRepository implements IUserRepository {
         return getUsers(country, SELECT_USERS_BY_COUNTRY);
     }
 
+    @Override
+    public void addUserTransaction(User newUser) {
+        Connection connection = getConnection();
+        Savepoint savepoint = null;
+        try (PreparedStatement preparedStatement = connection.prepareStatement(INSERT_USERS_SQL)) {
+            connection.setAutoCommit(false);
+            savepoint = connection.setSavepoint("sp1");
+            preparedStatement.setString(3, newUser.getName());
+            preparedStatement.setString(2, newUser.getEmail());
+            preparedStatement.setString(1, newUser.getCountry());
+            System.out.println(preparedStatement);
+            preparedStatement.executeUpdate();
+            connection.commit();
+        } catch (SQLException e) {
+            try {
+                System.out.println("Transaction error");
+                connection.rollback(savepoint);
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
+            printSQLException(e);
+        }
+    }
+
     private List<User> getUsers(String searchString, String selectUsersBy) {
         List<User> result = new ArrayList<>();
         try {

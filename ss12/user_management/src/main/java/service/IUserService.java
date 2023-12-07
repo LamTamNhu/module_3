@@ -18,4 +18,6 @@ public interface IUserService {
     List<User> searchUserByName(String name);
 
     List<User> searchUserByCountry(String country);
+
+    void addUserTransaction(User newUser);
 }

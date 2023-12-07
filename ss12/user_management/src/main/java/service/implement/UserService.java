@@ -43,4 +43,9 @@ public class UserService implements IUserService {
     public List<User> searchUserByCountry(String country) {
         return repository.searchUserByCountry(country);
     }
+
+    @Override
+    public void addUserTransaction(User newUser) {
+        repository.addUserTransaction(newUser);
+    }
 }
