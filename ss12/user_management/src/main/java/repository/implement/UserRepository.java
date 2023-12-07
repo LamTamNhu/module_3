@@ -10,15 +10,15 @@ import java.util.List;
 public class UserRepository implements IUserRepository {
     private final String jdbcURL = "jdbc:mysql://localhost:3306/demo";
     private final String jdbcUsername = "root";
-    private final String jdbcPassword = "codegym";
+    private final String jdbcPassword = "123456";
 
     private static final String INSERT_USERS_SQL = "INSERT INTO users (name, email, country) VALUES (?, ?, ?);";
     private static final String SELECT_USER_BY_ID = "select id,name,email,country from users where id =?";
-    private static final String SELECT_ALL_USERS = "select * from users";
+    private static final String SELECT_ALL_USERS = "call select_all_users();";
     private static final String SELECT_USERS_BY_NAME = "select * from users where name like ?";
     private static final String SELECT_USERS_BY_COUNTRY = "select * from users where country like ?";
-    private static final String DELETE_USERS_SQL = "delete from users where id = ?;";
-    private static final String UPDATE_USERS_SQL = "update users set name = ?,email= ?, country =? where id = ?;";
+    private static final String DELETE_USERS_SQL = "call delete_user(?);";
+    private static final String UPDATE_USERS_SQL = "call update_user(?,?,?,?);";
 
     public UserRepository() {
     }
@@ -125,8 +125,16 @@ public class UserRepository implements IUserRepository {
 
         List<User> users = new ArrayList<>();
         try (Connection connection = getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(SELECT_ALL_USERS)) {
-            users = getListUser(preparedStatement);
+             CallableStatement callableStatement = connection.prepareCall(SELECT_ALL_USERS)) {
+            ResultSet resultSet = callableStatement.executeQuery();
+            while (resultSet.next()) {
+                int id = resultSet.getInt("id");
+                String userName = resultSet.getString("name");
+                String email = resultSet.getString("email");
+                String country = resultSet.getString("country");
+
+                users.add(new User(id, userName, email, country));
+            }
         } catch (SQLException e) {
             printSQLException(e);
         }
@@ -135,9 +143,9 @@ public class UserRepository implements IUserRepository {
 
     public boolean deleteUser(int id) {
         boolean rowDeleted = false;
-        try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(DELETE_USERS_SQL);) {
-            statement.setInt(1, id);
-            rowDeleted = statement.executeUpdate() > 0;
+        try (Connection connection = getConnection(); CallableStatement callableStatement = connection.prepareCall(DELETE_USERS_SQL);) {
+            callableStatement.setInt(1, id);
+            rowDeleted = callableStatement.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -146,19 +154,18 @@ public class UserRepository implements IUserRepository {
 
     public boolean updateUser(User user) {
         boolean rowUpdated = false;
-        try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(UPDATE_USERS_SQL);) {
-            statement.setString(1, user.getName());
-            statement.setString(2, user.getEmail());
-            statement.setString(3, user.getCountry());
-            statement.setInt(4, user.getId());
+        try (Connection connection = getConnection(); CallableStatement callableStatement = connection.prepareCall(UPDATE_USERS_SQL);) {
+            callableStatement.setString(1, user.getName());
+            callableStatement.setString(2, user.getEmail());
+            callableStatement.setString(3, user.getCountry());
+            callableStatement.setInt(4, user.getId());
 
-            rowUpdated = statement.executeUpdate() > 0;
+            rowUpdated = callableStatement.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return rowUpdated;
     }
-
 
     private void printSQLException(SQLException ex) {
         for (Throwable e : ex) {
